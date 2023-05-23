@@ -93,6 +93,75 @@ class DataModel extends ChangeNotifier {
   }
 }
 
+// People provider
+final peopleProvider = ChangeNotifierProvider((ref) => DataModel());
+
+// Controllers
+final nameController = TextEditingController();
+final ageController = TextEditingController();
+
+// Person creation / updating dialog
+Future<Person?> createOrUpdatePersonDialog(BuildContext context,
+    [Person? existingPerson]) {
+  String? name = existingPerson?.name;
+  int? age = existingPerson?.age;
+
+  nameController.text = name ?? '';
+  ageController.text = age?.toString() ?? '';
+
+  return showDialog<Person?>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Create a person'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Enter name here...',
+                ),
+                onChanged: (value) => name = value,
+              ),
+              TextField(
+                controller: ageController,
+                decoration:
+                    const InputDecoration(labelText: 'Enter age here...'),
+                onChanged: (value) => age = int.tryParse(value),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel')),
+            TextButton(
+              onPressed: () {
+                if (name != null && age != null) {
+                  /// We have an existing person
+                  if (existingPerson != null) {
+                    final newPerson = existingPerson.updated(
+                      name,
+                      age,
+                    );
+                    Navigator.of(context).pop(newPerson);
+                  } else {
+                    /// No existing person, create a new one
+                    Navigator.of(context).pop(Person(age: age!, name: name!));
+                  }
+                } else {
+                  /// No name, age or both
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      });
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
