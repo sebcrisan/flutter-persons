@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:collection';
 
 // provider scope
 void main() {
@@ -48,6 +49,48 @@ class Person {
   /// toString for a person returns their name, age and uuid in a string
   @override
   String toString() => 'Person(name: $name, age: $age, uuid: $uuid)';
+}
+
+// Data model that manages a list of persons
+class DataModel extends ChangeNotifier {
+  /// Private list of people
+  final List<Person> _people = [];
+
+  /// Display the amount of people
+  int get count => _people.length;
+
+  /// People getter, list is unmodifiable
+  UnmodifiableListView<Person> get people => UnmodifiableListView(_people);
+
+  /// Add a person to the list of people
+  void add(Person person) {
+    _people.add(person);
+    notifyListeners();
+  }
+
+  /// Remove a person from the list of people
+  void remove(Person person) {
+    _people.remove(person);
+    notifyListeners();
+  }
+
+  void update(Person updatedPerson) {
+    /// Uses the hashes and equitable overrides we created earlier in order to easily
+    /// check if a person is already in the list of people
+    final index = _people.indexOf(updatedPerson);
+    final oldPerson = _people[index];
+
+    /// If the old person's name or age is different from the name or age that
+    /// the UI is giving us, we update the old person with the new name and age
+    if (oldPerson.name != updatedPerson.name ||
+        oldPerson.age != updatedPerson.age) {
+      _people[index] = oldPerson.updated(
+        updatedPerson.name,
+        updatedPerson.age,
+      );
+      notifyListeners();
+    }
+  }
 }
 
 class MyApp extends StatelessWidget {
